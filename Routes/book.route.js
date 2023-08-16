@@ -3,31 +3,39 @@ const bookRouter=express.Router();
 const {BookModel}=require("../model/book.model")
 
 bookRouter.get("/",async(req,res)=>{
-    const {sortBy,filterBy}=req.query
+    const {sortBy,filterBy,title}=req.query
     const sort=(sortBy==="asc")?1:-1;
     try {
-        if(!sortBy && !filterBy){
+        if(!sortBy && !filterBy && !title){
             const books=await BookModel.find()
            return res.status(200).send({
                 isError:false,
                 data:books
             })
         }
-        if(!sortBy){
+        if(!sortBy && !title){
             const books=await BookModel.find({Genre:filterBy})
             return res.status(200).send({
                 isError:false,
                 data:books
             })
         }
-        if(!filterBy){
+        if(!filterBy && !title){
             const books=await BookModel.find().sort({Price:sort})
             return res.status(200).send({
                 isError:false,
                 data:books
-            }) 
+            })
+
         }
-        const books=await BookModel.find({Genre:filterBy}).sort({Price:sort})
+        if(!filterBy && !sortBy){
+            const books=await BookModel.find({Title:{ $regex: title, $options: 'i'}});
+            return res.status(200).send({
+                isError:false,
+                data:books
+            })
+        }
+        const books=await BookModel.find({Genre:filterBy,Title:{ $regex: title, $options: 'i'}}).sort({Price:sort})
         res.status(200).send({
             isError:false,
             data:books
@@ -46,7 +54,7 @@ bookRouter.post("/add",async(req,res)=>{
         await book.save()
         res.status(200).send({
             isError:false,
-            msg:"Added successfully!!"
+            msg:"Added successfully!!",
         })
     } catch (error) {
         res.status(400).send({
@@ -94,6 +102,15 @@ bookRouter.delete("/delete/:id",async(req,res)=>{
         })
     }
 })
+
+// bookRouter.get("/books",async(req,res)=>{
+//     const {title}=req.query;
+//     try {
+//         const book=await BookModel.find({Title:title})
+//     } catch (error) {
+        
+//     }
+// })
 // bookRouter.delete("/delete/:productId", async (req, res) => {
 //     const productId = req.params.productId; // Use req.params.productId
 //     try {
@@ -106,3 +123,5 @@ bookRouter.delete("/delete/:id",async(req,res)=>{
 
 
 module.exports={bookRouter}
+
+// https://booktestingapp.onrender.com/book
