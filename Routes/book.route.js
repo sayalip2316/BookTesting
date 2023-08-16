@@ -3,9 +3,17 @@ const bookRouter=express.Router();
 const {BookModel}=require("../model/book.model")
 
 bookRouter.get("/",async(req,res)=>{
-    const {sortBy,filterBy,title}=req.query
+    const {sortBy,filterBy,title,page,limit}=req.query
     const sort=(sortBy==="asc")?1:-1;
     try {
+        if(page && limit){
+            let skipCount = (page - 1) * limit;
+            const books=await BookModel.find().skip(skipCount).limit(limit)
+            return res.status(200).send({
+                isError:false,
+                data:books
+            })
+        }
         if(!sortBy && !filterBy && !title){
             const books=await BookModel.find()
            return res.status(200).send({
@@ -103,6 +111,7 @@ bookRouter.delete("/delete/:id",async(req,res)=>{
     }
 })
 
+bookRouter.get("")
 // bookRouter.get("/books",async(req,res)=>{
 //     const {title}=req.query;
 //     try {
